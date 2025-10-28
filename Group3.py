@@ -15,8 +15,8 @@ import math
 # =========================
 # Alpaca API credentials
 # =========================
-API_KEY = 'PKH4XPYGKRN6B4TAE2V26F2CWP'
-API_SECRET = '8Uv6mMdZssZEE47d9jQGmp5jJQspBLYezm99ihJUUAJd'
+API_KEY = ''
+API_SECRET = ''
 BASE_URL = 'https://paper-api.alpaca.markets'
 
 # =========================
