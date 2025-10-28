@@ -12,28 +12,22 @@ import json
 import os
 import math
 
-# =========================
 # Alpaca API credentials
-# =========================
 API_KEY = ''
 API_SECRET = ''
 BASE_URL = 'https://paper-api.alpaca.markets'
 
-# =========================
 # Files
-# =========================
 STATE_FILE = 'trading_state.json'
 TRADES_FILE = 'trade_log.json'
 
-# =========================
+
 # Initialize Alpaca API
-# =========================
 api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
 stock_data_client = StockHistoricalDataClient(API_KEY, API_SECRET)
 
-# =========================
+
 # Symbols / Parameters
-# =========================
 # Use NVDA & AMD for pair signal; hold SPY in neutral
 PAIR_LONGABLE = 'NVDA'
 PAIR_SHORTABLE = 'AMD'
@@ -54,9 +48,8 @@ PAIR_ACTIVE_SPY_DOLLARS = 8000.0
 MAX_GROSS_DOLLARS = 10000.0
 EPS = 1e-6             # tiny threshold to avoid spam orders with ~0 qty deltas
 
-# =========================
-# Helpers: data, state, logs
-# =========================
+
+# data, state, logs
 def get_historical_data(symbol, time_frame, days=LOOKBACK_DAYS):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
@@ -118,9 +111,8 @@ def save_trades(trades):
     with open(TRADES_FILE, 'w') as f:
         json.dump(trades, f, indent=4)
 
-# =========================
+
 # Signal / Sizing
-# =========================
 def kalman_spread(nvda_close, amd_close):
     # Align by index and compute NVDA - AMD spread
     merged = pd.merge(
@@ -169,9 +161,7 @@ def target_dollar_allocation(price, realized_vol, base_dollars=BASE_DOLLARS_PER_
     qty = dollars / price  # FRACTIONAL shares allowed
     return float(qty), float(dollars)
 
-# =========================
-# Order / Position Helpers
-# =========================
+# Order / Positioning 
 def get_last_close(df):
     if df is None or df.empty:
         return None
@@ -197,7 +187,7 @@ def liquidate_symbol(symbol):
     print(f"Liquidating {symbol} position: {response.text}")
 
 def set_spy_target_dollars(target_dollars, spy_price):
-    # Adjust SPY position to approximate target dollars (fractional qty)
+    # Adjust SPY position to approximate target dollars 
     if spy_price is None or spy_price <= 0:
         print("SPY price unavailable, skipping SPY rebalance.")
         return
@@ -232,9 +222,7 @@ def gross_exposure_estimate(spy_price, spy_target, nvda_price, nvda_qty, amd_pri
         gross += abs(amd_qty) * amd_price
     return gross
 
-# =========================
 # Pair Trade Execution
-# =========================
 def open_pair_trade(z, nvda_px, amd_px, nvda_vol, amd_vol, state, trades):
     # z < -2 => NVDA undervalued vs AMD => long NVDA, short AMD
     # z >  2 => NVDA overvalued vs AMD => short NVDA, long AMD
@@ -374,9 +362,8 @@ def close_pair_trade(z, nvda_px, amd_px, state, trades, reason="exit"):
 
     return state, trades
 
-# =========================
+
 # Main Trading Loop (Daily)
-# =========================
 def trading_bot():
     account = api.get_account()
     print(f"Current Buying Power: {account.buying_power}")
@@ -461,9 +448,6 @@ def trading_bot():
         wait_until_next_close_plus_buffer()
 
 def wait_until_next_close_plus_buffer():
-    """
-    Sleep until ~next market day 16:10 local time.
-    """
     now = datetime.now()
     target = now.replace(hour=16, minute=10, second=0, microsecond=0)
     if now >= target:
@@ -475,8 +459,6 @@ def wait_until_next_close_plus_buffer():
     print(f"Waiting ~{mins:.1f} minutes until next daily check.")
     time.sleep(max(60, delta))  # at least 60 seconds safety
 
-# =========================
-# Entrypoint
-# =========================
+# run bit
 if __name__ == "__main__":
     trading_bot()
