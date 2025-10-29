@@ -24,7 +24,7 @@ UNIVERSE = [
     "AXP","BA","BAC","BK","BKNG","BLK","BMY","BRK.B","C","CAT",
     "CHTR","CL","CMCSA","COF","COP","COST","CRM","CSCO","CVS","CVX",
     "DHR","DIS","DOW","DUK","EMR","EXC","F","FDX","GD","GE",
-    "GILD","GM","GOOG","GOOGL","GS","HD","HON","IBM","INTC","INTU",
+    "GILD","GM","GOOG","APH","GS","HD","HON","IBM","INTC","INTU",
     "ISRG","JNJ","JPM","KO","LIN","LLY","LMT","LOW","MAR","MCD",
     "MDLZ","MDT","MET","META","MMM","MO","MRK","MS","MSFT","NEE",
     "NFLX","NKE","NVDA","ORCL","PEP","PFE","PG","PM","PYPL","QCOM",
