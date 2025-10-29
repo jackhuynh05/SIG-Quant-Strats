@@ -10,8 +10,8 @@ import time, json, os, math
 from xgboost import XGBClassifier
 
 # Alpaca API credentials
-API_KEY    = ''
-API_SECRET = ''
+API_KEY    = 'PKH4XPYGKRN6B4TAE2V26F2CWP'
+API_SECRET = '8Uv6mMdZssZEE47d9jQGmp5jJQspBLYezm99ihJUUAJd'
 BASE_URL   = 'https://paper-api.alpaca.markets'
 
 api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
@@ -23,9 +23,9 @@ UNIVERSE = [
     "AAPL","ABBV","ABT","ACN","ADBE","AIG","AMGN","AMT","AMZN","AVGO",
     "AXP","BA","BAC","BK","BKNG","BLK","BMY","BRK.B","C","CAT",
     "CHTR","CL","CMCSA","COF","COP","COST","CRM","CSCO","CVS","CVX",
-    "DHR","DIS","DOW","DUK","EMR","EXC","F","FDX","GD","GE",
-    "GILD","GM","GOOG","APH","GS","HD","HON","IBM","INTC","INTU",
-    "ISRG","JNJ","JPM","KO","LIN","LLY","LMT","LOW","MAR","MCD",
+    "DHR","DIS","DOW","DUK","EMR","EXC","F","FDX","LRCX","GE",
+    "GILD","GM","PGR","APH","GS","HD","HON","IBM","INTC","INTU",
+    "ISRG","JNJ","PLTR","KO","LIN","LLY","LMT","LOW","MAR","MCD",
     "MDLZ","MDT","MET","META","MMM","MO","MRK","MS","MSFT","NEE",
     "NFLX","NKE","NVDA","ORCL","PEP","PFE","PG","PM","PYPL","QCOM",
     "RTX","SBUX","SO","SPG","T","TGT","TMO","TMUS","TXN","UNH",
