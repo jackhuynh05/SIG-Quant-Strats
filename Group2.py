@@ -1,3 +1,4 @@
+# group 2, ML Sentiment
 import alpaca_trade_api as tradeapi
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.requests import StockBarsRequest
