@@ -21,16 +21,16 @@ stock_data_client = StockHistoricalDataClient(API_KEY, API_SECRET)
 
 # Config
 UNIVERSE = [
-    "AAPL","ABBV","ABT","ACN","ADBE","AIG","AMGN","AMT","AMZN","AVGO",
+    "CEG","ABBV","ABT","ACN","ADBE","AIG","AMGN","AMT","TDG","CRWD",
     "AXP","BA","BAC","BK","BKNG","BLK","BMY","BRK.B","C","CAT",
-    "CHTR","CL","CMCSA","COF","COP","COST","CRM","CSCO","CVS","CVX",
-    "DHR","DIS","DOW","DUK","EMR","EXC","F","FDX","LRCX","GE",
-    "GILD","GM","PGR","APH","GS","HD","HON","IBM","INTC","INTU",
-    "ISRG","JNJ","PLTR","KO","LIN","LLY","LMT","LOW","MAR","MCD",
-    "MDLZ","MDT","MET","META","MMM","MO","MRK","MS","MSFT","NEE",
-    "NFLX","NKE","NVDA","ORCL","PEP","PFE","PG","PM","PYPL","QCOM",
+    "CHTR","CL","CMCSA","COF","COP","MELI","CRM","VEEV","CVS","CVX",
+    "DHR","DIS","DOW","DUK","EMR","EXC","F","SPOT","ATO","GE",
+    "GILD","GM","PGR","APH","GS","HD","HON","IBM","MLM","INTU",
+    "ISRG","JNJ","AMAT","KO","LIN","LLY","LMT","LOW","MAR","MCD",
+    "MDLZ","MDT","MET","TSM","MMM","MO","MRK","MS","TTWO","NEE",
+    "SCHW","NKE","PLD","ORCL","PEP","PFE","PG","PM","PANW","QCOM",
     "RTX","SBUX","SO","SPG","T","TGT","TMO","TMUS","TXN","UNH",
-    "UNP","UPS","USB","V","VZ","WBA","WFC","WMT","XOM"
+    "UNP","CTAS","USB","V","VZ","WBA","WFC","WMT","XOM"
 ]
 
 BENCHMARK = "SPY"
