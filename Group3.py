@@ -1,4 +1,4 @@
-# group 2, AMD, NVDA pairs trading
+# group 2, NVDA, AMD Pairs trade
 import alpaca_trade_api as tradeapi
 import pandas as pd
 import numpy as np
@@ -13,14 +13,16 @@ import json
 import os
 import math
 
+
 # Alpaca API credentials
-API_KEY = ''
-API_SECRET = ''
+API_KEY = 'PKH4XPYGKRN6B4TAE2V26F2CWP'
+API_SECRET = '8Uv6mMdZssZEE47d9jQGmp5jJQspBLYezm99ihJUUAJd'
 BASE_URL = 'https://paper-api.alpaca.markets'
 
+
 # Files
-STATE_FILE = 'trading_state.json'
-TRADES_FILE = 'trade_log.json'
+STATE_FILE = 'trading_state_group3.json'
+TRADES_FILE = 'trade_log_group3.json'
 
 
 # Initialize Alpaca API
@@ -48,7 +50,6 @@ NEUTRAL_DOLLARS = 10000.0
 PAIR_ACTIVE_SPY_DOLLARS = 8000.0
 MAX_GROSS_DOLLARS = 10000.0
 EPS = 1e-6             # tiny threshold to avoid spam orders with ~0 qty deltas
-
 
 # data, state, logs
 def get_historical_data(symbol, time_frame, days=LOOKBACK_DAYS):
@@ -162,7 +163,8 @@ def target_dollar_allocation(price, realized_vol, base_dollars=BASE_DOLLARS_PER_
     qty = dollars / price  # FRACTIONAL shares allowed
     return float(qty), float(dollars)
 
-# Order / Positioning 
+
+# Order / Position Helpers
 def get_last_close(df):
     if df is None or df.empty:
         return None
@@ -188,7 +190,7 @@ def liquidate_symbol(symbol):
     print(f"Liquidating {symbol} position: {response.text}")
 
 def set_spy_target_dollars(target_dollars, spy_price):
-    # Adjust SPY position to approximate target dollars 
+    # Adjust SPY position to approximate target dollars (fractional qty)
     if spy_price is None or spy_price <= 0:
         print("SPY price unavailable, skipping SPY rebalance.")
         return
@@ -200,13 +202,13 @@ def set_spy_target_dollars(target_dollars, spy_price):
     delta = desired_qty - current_qty
     if delta > EPS:
         try:
-            api.submit_order(symbol=BENCHMARK, qty=float(delta), side='buy', type='market', time_in_force='gtc')
+            api.submit_order(symbol=BENCHMARK, qty=float(delta), side='buy', type='market', time_in_force='day')
             print(f"Bought ~{delta:.6f} {BENCHMARK} to reach target ${target_dollars:.0f}.")
         except tradeapi.rest.APIError as e:
             print(f"API Error (buy SPY): {e}")
     elif delta < -EPS:
         try:
-            api.submit_order(symbol=BENCHMARK, qty=float(abs(delta)), side='sell', type='market', time_in_force='gtc')
+            api.submit_order(symbol=BENCHMARK, qty=float(abs(delta)), side='sell', type='market', time_in_force='day')
             print(f"Sold ~{abs(delta):.6f} {BENCHMARK} to reach target ${target_dollars:.0f}.")
         except tradeapi.rest.APIError as e:
             print(f"API Error (sell SPY): {e}")
@@ -222,6 +224,7 @@ def gross_exposure_estimate(spy_price, spy_target, nvda_price, nvda_qty, amd_pri
     if amd_price and amd_qty:
         gross += abs(amd_qty) * amd_price
     return gross
+
 
 # Pair Trade Execution
 def open_pair_trade(z, nvda_px, amd_px, nvda_vol, amd_vol, state, trades):
@@ -257,9 +260,9 @@ def open_pair_trade(z, nvda_px, amd_px, nvda_vol, amd_vol, state, trades):
         if long_nvda:
             # BUY NVDA, SELL AMD
             if nvda_qty > EPS:
-                api.submit_order(symbol=PAIR_LONGABLE, qty=float(nvda_qty), side='buy', type='market', time_in_force='gtc')
+                api.submit_order(symbol=PAIR_LONGABLE, qty=float(nvda_qty), side='buy', type='market', time_in_force='day')
             if amd_qty > EPS:
-                api.submit_order(symbol=PAIR_SHORTABLE, qty=float(amd_qty), side='sell', type='market', time_in_force='gtc')
+                api.submit_order(symbol=PAIR_SHORTABLE, qty=float(amd_qty), side='sell', type='market', time_in_force='day')
             regime = 'long_pair'
             side_desc = 'Long NVDA / Short AMD'
             nvda_qty_signed = +nvda_qty
@@ -267,9 +270,9 @@ def open_pair_trade(z, nvda_px, amd_px, nvda_vol, amd_vol, state, trades):
         else:
             # SELL NVDA, BUY AMD
             if nvda_qty > EPS:
-                api.submit_order(symbol=PAIR_LONGABLE, qty=float(nvda_qty), side='sell', type='market', time_in_force='gtc')
+                api.submit_order(symbol=PAIR_LONGABLE, qty=float(nvda_qty), side='sell', type='market', time_in_force='day')
             if amd_qty > EPS:
-                api.submit_order(symbol=PAIR_SHORTABLE, qty=float(amd_qty), side='buy', type='market', time_in_force='gtc')
+                api.submit_order(symbol=PAIR_SHORTABLE, qty=float(amd_qty), side='buy', type='market', time_in_force='day')
             regime = 'short_pair'
             side_desc = 'Short NVDA / Long AMD'
             nvda_qty_signed = -nvda_qty
@@ -316,17 +319,17 @@ def close_pair_trade(z, nvda_px, amd_px, state, trades, reason="exit"):
         nvda_qty_open = float(ot["nvda_qty"])
         if abs(nvda_qty_open) > EPS:
             if nvda_qty_open > 0:
-                api.submit_order(symbol=PAIR_LONGABLE, qty=float(abs(nvda_qty_open)), side='sell', type='market', time_in_force='gtc')
+                api.submit_order(symbol=PAIR_LONGABLE, qty=float(abs(nvda_qty_open)), side='sell', type='market', time_in_force='day')
             else:
-                api.submit_order(symbol=PAIR_LONGABLE, qty=float(abs(nvda_qty_open)), side='buy', type='market', time_in_force='gtc')
+                api.submit_order(symbol=PAIR_LONGABLE, qty=float(abs(nvda_qty_open)), side='buy', type='market', time_in_force='day')
 
         # For AMD
         amd_qty_open = float(ot["amd_qty"])
         if abs(amd_qty_open) > EPS:
             if amd_qty_open > 0:
-                api.submit_order(symbol=PAIR_SHORTABLE, qty=float(abs(amd_qty_open)), side='sell', type='market', time_in_force='gtc')
+                api.submit_order(symbol=PAIR_SHORTABLE, qty=float(abs(amd_qty_open)), side='sell', type='market', time_in_force='day')
             else:
-                api.submit_order(symbol=PAIR_SHORTABLE, qty=float(abs(amd_qty_open)), side='buy', type='market', time_in_force='gtc')
+                api.submit_order(symbol=PAIR_SHORTABLE, qty=float(abs(amd_qty_open)), side='buy', type='market', time_in_force='day')
 
         # Compute P&L
         nvda_pnl = (nvda_px - ot["nvda_entry_px"]) * ot["nvda_qty"]
@@ -460,6 +463,7 @@ def wait_until_next_close_plus_buffer():
     print(f"Waiting ~{mins:.1f} minutes until next daily check.")
     time.sleep(max(60, delta))  # at least 60 seconds safety
 
-# run bit
+
+# Entrypoint
 if __name__ == "__main__":
     trading_bot()
