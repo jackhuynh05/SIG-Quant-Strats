@@ -27,7 +27,7 @@ api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
 stock_data_client = StockHistoricalDataClient(API_KEY, API_SECRET)
 
 # Universe / Parameters
-UNIVERSE = ['AMD', 'TSLA', 'COIN', 'INTC', 'SHOP', 'PYPL', 'ASAN', 'NVDA', 'MSTR', 'ARM']
+UNIVERSE = ['AXON', 'TSLA', 'COIN', 'INTC', 'SHOP', 'PYPL', 'ASAN', 'NVDA', 'MSTR', 'ARM']
 
 TIMEFRAME = TimeFrame.Hour     # 1-hour bars
 LOOKBACK_DAYS = 60             # enough to cover hourly windows comfortably
@@ -135,10 +135,29 @@ def get_position(symbol):
     except Exception:
         return None
 
-def submit_fractional_order(symbol, qty, side):
+# --- REPLACED: separate helpers for fractional longs vs whole-share shorts ---
+
+def submit_long_fractional_order(symbol, qty, side):
+    """
+    Fractional LONG entries/exits allowed. side in {'buy','sell'}.
+    Always use DAY for fractional orders.
+    """
     if qty <= EPS:
         return
-    api.submit_order(symbol=symbol, qty=float(qty), side=side, type='market', time_in_force='gtc')
+    api.submit_order(symbol=symbol, qty=float(qty), side=side,
+                     type='market', time_in_force='day')
+
+def submit_short_whole_order(symbol, qty, side):
+    """
+    Whole-share SHORT entries/exits only. side in {'sell','buy'}.
+    'sell' opens/increases a short, 'buy' covers/reduces a short.
+    """
+    q = int(math.floor(float(qty)))
+    if q < 1:
+        print(f"{symbol}: computed short qty < 1 share; skipping.")
+        return
+    api.submit_order(symbol=symbol, qty=q, side=side,
+                     type='market', time_in_force='day')
 
 def liquidate_symbol(symbol):
     url = f"{BASE_URL}/v2/positions/{symbol}?percentage=100"
@@ -151,20 +170,26 @@ def liquidate_symbol(symbol):
     print(f"Liquidating {symbol}: {response.text}")
 
 # Trade Open/Close per Symbol
+# --- REPLACED: longs stay fractional; shorts floor to whole shares ---
 def open_symbol_trade(symbol, direction, price, state, trades):
     """
     direction: 'long' or 'short'
     """
-    qty = DOLLARS_PER_TRADE / price
     try:
         if direction == 'long':
-            submit_fractional_order(symbol, qty, 'buy')
+            qty = DOLLARS_PER_TRADE / price                    # fractional ok
+            submit_long_fractional_order(symbol, qty, 'buy')
             stop_anchor = price  # for long, track highest since entry
         else:
-            submit_fractional_order(symbol, qty, 'sell')
+            qty_float = DOLLARS_PER_TRADE / price              # must be whole for shorts
+            qty = int(math.floor(qty_float))
+            if qty < 1:
+                print(f"{symbol}: short size < 1 share; skipping open.")
+                return state, trades
+            submit_short_whole_order(symbol, qty, 'sell')
             stop_anchor = price  # for short, track lowest since entry
 
-        print(f"Opened {direction.upper()} {symbol}: qty={qty:.6f} @ ~{price:.2f}")
+        print(f"Opened {direction.upper()} {symbol}: qty={float(qty):.6f} @ ~{price:.2f}")
 
         # Record open in state/log
         state["symbols"][symbol]["regime"] = direction
@@ -191,6 +216,7 @@ def open_symbol_trade(symbol, direction, price, state, trades):
 
     return state, trades
 
+# --- REPLACED: close longs fractionally; cover shorts with whole shares ---
 def close_symbol_trade(symbol, price, state, trades, reason="exit"):
     ot = state["symbols"][symbol]["open_trade"]
     if not ot:
@@ -198,12 +224,18 @@ def close_symbol_trade(symbol, price, state, trades, reason="exit"):
 
     try:
         qty_open = float(ot["qty"])
+
         if ot["side"] == "long":
-            submit_fractional_order(symbol, qty_open, 'sell')
+            # fractional sell to close long
+            submit_long_fractional_order(symbol, qty_open, 'sell')
             pnl = (price - ot["entry_px"]) * qty_open
         else:
-            submit_fractional_order(symbol, qty_open, 'buy')
-            pnl = (ot["entry_px"] - price) * qty_open
+            # whole-share buy to cover short
+            qty_cover = int(round(qty_open))
+            if qty_cover < 1:
+                qty_cover = 1
+            submit_short_whole_order(symbol, qty_cover, 'buy')
+            pnl = (ot["entry_px"] - price) * qty_cover
 
         # Update summary
         state["summary"]["total_profit"] += float(pnl)
@@ -370,6 +402,8 @@ def wait_until_next_hour_plus_buffer():
     print(f"Waiting ~{mins:.1f} minutes for next hourly check.")
     time.sleep(max(30, delta))  # at least 30s
 
+# =========================
 # Entrypoint
+# =========================
 if __name__ == "__main__":
     trading_bot_group5()
