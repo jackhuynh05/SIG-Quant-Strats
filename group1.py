@@ -11,8 +11,8 @@ import time, json, os, math, requests
 
 
 # Alpaca API credentials
-API_KEY    = ''
-API_SECRET = ''
+API_KEY    = 'PKH4XPYGKRN6B4TAE2V26F2CWP'
+API_SECRET = '8Uv6mMdZssZEE47d9jQGmp5jJQspBLYezm99ihJUUAJd'
 BASE_URL   = "https://paper-api.alpaca.markets"
 
 api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version="v2")
@@ -20,7 +20,7 @@ stock_data_client = StockHistoricalDataClient(API_KEY, API_SECRET)
 
 
 # Universe / Weights
-BASKET = ["NVDA","AAPL","MSFT","AMZN","META","AVGO","GOOG","TSLA","NFLX","PLTR","COST","AMD","ASML","CSCO"]
+BASKET = ["MU","AAPL","MSFT","AMZN","META","AVGO","GOOGL","TSLA","NFLX","PLTR","COST","LRCX","ASML","CSCO"]
 QQQ    = "QQQ"
 UNIVERSE = sorted(list(set(BASKET + [QQQ])))
 
