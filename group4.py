@@ -18,7 +18,7 @@ stock_data_client = StockHistoricalDataClient(API_KEY, API_SECRET)
 
 # Universe / Config
 ENERGY = ["EOG", "EIX", "NEE", "BP", "GEVO"]
-TRANSP = ["UPS", "FDX", "DAL", "UAL"]
+TRANSP = ["UPS", "FDX", "DAL", "UAL", "XPO"]
 UNIVERSE = sorted(list(set(ENERGY + TRANSP)))
 
 START_DAYS = 365 * 5     # ~5 years daily history
@@ -510,7 +510,8 @@ def trading_bot_energy_transport():
             print("Rebalance error:", e)
         wait_until_next_monday_1005_local()
 
-
+# =========================
 # Entrypoint
+# =========================
 if __name__ == "__main__":
     trading_bot_energy_transport()
